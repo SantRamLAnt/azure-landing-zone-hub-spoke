@@ -145,30 +145,6 @@ The following validations were performed:
 - [x] Firewall Policy configuration
 - [x] Cost optimization verification
 
----
-
-## Screenshots
-
-### VNet Peering
-![VNet Peering](screenshots/networkingpeer.png)
-
-### Effective Routes (UDR Validation)
-![Effective Routes](screenshots/VMRoute.png)
-
-### UDR Configuration
-![UDR](screenshots/networkingudr.png)
-
-### Azure Policy
-![Azure Policy](screenshots/azurepolicyrequired.png)
-
-### Firewall Policy
-![Firewall Policy](screenshots/securityfirewall.png)
-
-### Cost-Aware VM (Deallocated)
-![VM Deallocated](screenshots/costvmdeallocated.png)
-
----
-
 ## Interview Walkthrough
 
 During an interview, this project can be presented as:
