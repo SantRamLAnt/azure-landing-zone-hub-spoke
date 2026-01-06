@@ -1,137 +1,100 @@
-# Azure Landing Zone – Hub and Spoke (Non-Production)
+# Azure Landing Zone – Hub & Spoke Architecture (Non-Prod)
 
 ## Overview
+This project demonstrates a production-style **Azure Landing Zone (ALZ)** network foundation using a **Hub-and-Spoke architecture**.  
+It focuses on secure traffic flow, centralized egress, governance, and cost-aware design aligned with enterprise cloud platform engineering standards.
 
-This repository documents a non-production **Azure Landing Zone** implementation using a **hub-and-spoke network topology**.
-The project demonstrates **governance, centralized networking, controlled egress routing, and policy-first security design**, aligned with enterprise Azure best practices.
-
-The environment was intentionally designed to balance **technical depth, cost efficiency, and interview readiness**.
+The implementation mirrors patterns used in regulated and large-scale environments such as utilities, finance, and healthcare.
 
 ---
 
 ## Architecture Summary
-
-**Topology**
-
-* Hub VNet (Connectivity layer)
-* Spoke VNet (Workload – NonProd)
-* Hub ↔ Spoke peering
-* User Defined Routes (UDRs) forcing egress through the hub
-* Azure Firewall **Policy-first** security model (firewall instance not deployed to control cost)
-
-**IP Design**
-
-* Hub VNet: `10.0.0.0/16`
-* Spoke VNet: `10.1.0.0/16`
-* Workload Subnet: `10.1.0.0/24`
-
----
-
-## Governance & Management
-
-**Management Groups**
-
-* Root
-* Platform
-* Landing Zones
-* Workload (NonProd)
-
-**Azure Policy**
-
-* Required resource tags enforced at subscription scope:
-
-  * `Owner`
-  * `Environment`
-  * `Application`
-
-This ensures governance, cost attribution, and ownership tracking from resource creation.
+- **Hub VNet**
+  - Centralized connectivity
+  - Azure Firewall for outbound traffic inspection
+- **Spoke VNet**
+  - Workload subnet hosting Linux VM
+  - No direct internet exposure
+- **User Defined Routes (UDR)**
+  - Default route (`0.0.0.0/0`) forces traffic through the hub firewall
+- **VNet Peering**
+  - Hub ↔ Spoke connectivity
+- **Azure Policy**
+  - Subscription-level security and compliance baseline
+- **Cost Optimization**
+  - Azure Spot VM
+  - VM deallocated when not in use
 
 ---
 
-## Networking
-
-**Hub-and-Spoke Design**
-
-* VNet peering configured with forwarded traffic allowed
-* No direct internet egress from spoke workloads
-
-**User Defined Routes**
-
-* Default route (`0.0.0.0/0`) defined on the spoke subnet
-* Next hop configured as a virtual appliance in the hub
-* Azure system internet route overridden
-
-**Routing Validation**
-
-* A test VM was deployed to create a NIC
-* Effective Routes were validated at the NIC level
-* Confirmed that:
-
-  * Azure default internet route is invalid
-  * User-defined route forwards traffic toward the hub
+## Key Azure Services Used
+- Azure Virtual Networks (Hub & Spoke)
+- Azure Firewall + Firewall Policy
+- User Defined Routes (UDR)
+- VNet Peering
+- Azure Policy Assignments
+- Azure Virtual Machines (Linux)
+- Azure Monitor (route validation)
 
 ---
 
-## Security (Policy-First Firewall Design)
+## Traffic Flow Design
+1. Workload VM resides in **spoke workload subnet**
+2. Subnet UDR overrides Azure default routing
+3. All outbound traffic (`0.0.0.0/0`) is sent to:
+   - **Next hop: Virtual Appliance**
+   - **IP: Azure Firewall private IP**
+4. Effective Routes confirm user-defined routing precedence
 
-An **Azure Firewall Policy** was created to demonstrate centralized, scalable security governance without deploying a full firewall instance.
-
-**Firewall Policy Components**
-
-* Rule Collection Group: `rcg-nonprod-egress`
-* Network Rule Collection:
-
-  * DNS / NTP egress
-* Application Rule Collection:
-
-  * OS and package update endpoints (FQDN-based)
-
-This reflects a **policy-first approach**, allowing security rules to be designed, reviewed, and versioned independently of enforcement infrastructure.
+This ensures:
+- Centralized inspection
+- No direct internet breakout from spokes
+- Predictable, auditable traffic paths
 
 ---
 
-## Cost Management
+## Validation & Evidence
+The following screenshots demonstrate correct platform behavior:
 
-Cost-aware decisions were intentionally applied:
+- Hub ↔ Spoke VNet Peering (Connected)
+- User Defined Route forcing default traffic to firewall
+- Effective Routes showing UDR override
+- Azure Firewall Policy configuration
+- VM deployed in spoke workload subnet
+- Cost-optimized VM state (deallocated)
 
-* Azure Spot VM used for testing
-* VM deallocated after validation
-* No firewall runtime deployed
-* No always-on compute resources
-
-This approach enables architectural validation without unnecessary cloud spend.
-
----
-
-## Validation Evidence
-
-The following validations were performed:
-
-* Hub ↔ Spoke peering connectivity
-* UDR enforcement
-* Runtime route validation via **Effective Routes**
-* Governance enforcement via Azure Policy
-
-Screenshots are included in the `/architecture` directory.
+> Screenshots are provided in this repository to validate real Azure control-plane behavior.
 
 ---
 
-## Interview Walkthrough
-
-During an interview, this project can be presented as:
-
-1. Governance first (management groups + policy)
-2. Network segmentation (hub-and-spoke)
-3. Traffic control (UDRs)
-4. Security design (firewall policy)
-5. Runtime validation
-6. Cost optimization decisions
+## Cost Awareness
+To minimize ongoing cost while preserving architectural integrity:
+- Azure Spot VM is used
+- VM is stopped/deallocated when not actively tested
+- No public IPs assigned to workloads
 
 ---
 
-## Notes
+## Why This Matters
+This project reflects:
+- Enterprise network segmentation
+- Zero-trust traffic control principles
+- Cloud governance fundamentals
+- Real Azure troubleshooting and validation skills
 
-This repository documents architecture, configuration decisions, and validation steps.
-Full live walkthroughs and extensions (e.g., Azure Firewall deployment) can be demonstrated during an interview if required.
+It is designed to be **discussed live during interviews**, including trade-offs, design decisions, and operational considerations.
 
 ---
+
+## Future Enhancements (Planned)
+- Terraform IaC implementation
+- Azure Bastion integration
+- Azure Monitor + Log Analytics traffic logging
+- Private DNS Zones
+- CI/CD deployment of network components
+
+---
+
+## Author
+Luis Antonio  
+Cloud & Platform Engineering Focus
