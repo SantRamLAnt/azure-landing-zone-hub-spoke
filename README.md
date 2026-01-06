@@ -1,9 +1,5 @@
 # Azure Landing Zone – Hub and Spoke Portfolio
 
-## 🚀 Live Demo
-
-[([https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://azure-landing-zone-hub-spoke.streamlit.app)](https://azure-landing-zone-app-spoke-bzbewte6zf5twaa9ff3res.streamlit.app)](https://azure-landing-zone-app-spoke-bzbewte6zf5twaa9ff3res.streamlit.app)
-
 ---
 
 ## Overview
