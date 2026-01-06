@@ -136,29 +136,27 @@ The following validations were performed:
 - [x] Firewall Policy configuration
 - [x] Cost optimization verification
 
-Screenshots are included in the `/architecture` directory.
-
 ---
 
 ## Screenshots
 
 ### VNet Peering
-![VNet Peering](architecture/networkingpeer.png)
+![VNet Peering](screenshots/networkingpeer.png)
 
 ### Effective Routes (UDR Validation)
-![Effective Routes](architecture/VMRoute.png)
+![Effective Routes](screenshots/VMRoute.png)
 
 ### UDR Configuration
-![UDR](architecture/networkingudr.png)
+![UDR](screenshots/networkingudr.png)
 
 ### Azure Policy
-![Azure Policy](architecture/azurepolicyrequired.png)
+![Azure Policy](screenshots/azurepolicyrequired.png)
 
 ### Firewall Policy
-![Firewall Policy](architecture/securityfirewall.png)
+![Firewall Policy](screenshots/securityfirewall.png)
 
 ### Cost-Aware VM (Deallocated)
-![VM Deallocated](architecture/costvmdeallocated.png)
+![VM Deallocated](screenshots/costvmdeallocated.png)
 
 ---
 
