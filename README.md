@@ -14,6 +14,15 @@ This repository documents a non-production **Azure Landing Zone** implementation
 
 The environment was intentionally designed to balance **technical depth, cost efficiency, and interview readiness**.
 
+## What This Project Demonstrates (At a Glance)
+
+- Enterprise Azure Landing Zone design
+- Governance-first subscription and policy strategy
+- Centralized egress control using UDRs
+- Security decoupled via Azure Firewall Policy
+- Runtime validation using Effective Routes
+- Cost-aware architectural decision making
+
 ---
 
 ## Architecture Summary
