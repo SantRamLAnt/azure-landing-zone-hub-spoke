@@ -1,100 +1,206 @@
-# Azure Landing Zone – Hub & Spoke Architecture (Non-Prod)
+# Azure Landing Zone – Hub and Spoke Portfolio
+
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://azure-landing-zone-hub-spoke.streamlit.app)
+
+## 🚀 Live Demo
+
+**[View Interactive Portfolio →](https://azure-landing-zone-hub-spoke.streamlit.app)**
+
+---
 
 ## Overview
-This project demonstrates a production-style **Azure Landing Zone (ALZ)** network foundation using a **Hub-and-Spoke architecture**.  
-It focuses on secure traffic flow, centralized egress, governance, and cost-aware design aligned with enterprise cloud platform engineering standards.
 
-The implementation mirrors patterns used in regulated and large-scale environments such as utilities, finance, and healthcare.
+This repository documents a non-production **Azure Landing Zone** implementation using a **hub-and-spoke network topology**. The project demonstrates **governance, centralized networking, controlled egress routing, and policy-first security design**, aligned with enterprise Azure best practices.
+
+The environment was intentionally designed to balance **technical depth, cost efficiency, and interview readiness**.
 
 ---
 
 ## Architecture Summary
-- **Hub VNet**
-  - Centralized connectivity
-  - Azure Firewall for outbound traffic inspection
-- **Spoke VNet**
-  - Workload subnet hosting Linux VM
-  - No direct internet exposure
-- **User Defined Routes (UDR)**
-  - Default route (`0.0.0.0/0`) forces traffic through the hub firewall
-- **VNet Peering**
-  - Hub ↔ Spoke connectivity
-- **Azure Policy**
-  - Subscription-level security and compliance baseline
-- **Cost Optimization**
-  - Azure Spot VM
-  - VM deallocated when not in use
+
+### Topology
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        MANAGEMENT GROUPS                            │
+│  ┌──────────┐  ┌──────────┐  ┌──────────────┐  ┌────────────────┐  │
+│  │   Root   │→ │ Platform │→ │ Landing Zones│→ │Workload(NonProd)│ │
+│  └──────────┘  └──────────┘  └──────────────┘  └────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                         NETWORK TOPOLOGY                            │
+│                                                                     │
+│   ┌─────────────────────┐          ┌─────────────────────┐         │
+│   │     HUB VNET        │          │    SPOKE VNET       │         │
+│   │   10.0.0.0/16       │◄────────►│   10.1.0.0/16       │         │
+│   │                     │  Peering │                     │         │
+│   │ ┌─────────────────┐ │          │ ┌─────────────────┐ │         │
+│   │ │ Firewall Policy │ │          │ │  Workload VM    │ │         │
+│   │ │    10.0.0.4     │ │◄─────────│ │   10.1.0.4      │ │         │
+│   │ └─────────────────┘ │   UDR    │ └─────────────────┘ │         │
+│   └─────────────────────┘          └─────────────────────┘         │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### IP Design
+
+| Component | CIDR Block |
+|-----------|------------|
+| Hub VNet | 10.0.0.0/16 |
+| Spoke VNet | 10.1.0.0/16 |
+| Workload Subnet | 10.1.0.0/24 |
 
 ---
 
-## Key Azure Services Used
-- Azure Virtual Networks (Hub & Spoke)
-- Azure Firewall + Firewall Policy
-- User Defined Routes (UDR)
-- VNet Peering
-- Azure Policy Assignments
-- Azure Virtual Machines (Linux)
-- Azure Monitor (route validation)
+## Governance & Management
+
+### Management Groups
+
+- Root
+- Platform
+- Landing Zones
+- Workload (NonProd)
+
+### Azure Policy
+
+Required resource tags enforced at subscription scope:
+- `Owner` - Accountability tracking
+- `Environment` - Lifecycle stage (NonProd)
+- `Application` - Workload identification
+
+This ensures governance, cost attribution, and ownership tracking from resource creation.
 
 ---
 
-## Traffic Flow Design
-1. Workload VM resides in **spoke workload subnet**
-2. Subnet UDR overrides Azure default routing
-3. All outbound traffic (`0.0.0.0/0`) is sent to:
-   - **Next hop: Virtual Appliance**
-   - **IP: Azure Firewall private IP**
-4. Effective Routes confirm user-defined routing precedence
+## Networking
 
-This ensures:
-- Centralized inspection
-- No direct internet breakout from spokes
-- Predictable, auditable traffic paths
+### Hub-and-Spoke Design
 
----
+- VNet peering configured with forwarded traffic allowed
+- No direct internet egress from spoke workloads
 
-## Validation & Evidence
-The following screenshots demonstrate correct platform behavior:
+### User Defined Routes
 
-- Hub ↔ Spoke VNet Peering (Connected)
-- User Defined Route forcing default traffic to firewall
-- Effective Routes showing UDR override
-- Azure Firewall Policy configuration
-- VM deployed in spoke workload subnet
-- Cost-optimized VM state (deallocated)
+| Route Name | Address Prefix | Next Hop Type | Next Hop Address |
+|------------|---------------|---------------|------------------|
+| default-to-hub | 0.0.0.0/0 | Virtual Appliance | 10.0.0.4 |
 
-> Screenshots are provided in this repository to validate real Azure control-plane behavior.
+### Routing Validation
+
+A test VM was deployed to create a NIC. Effective Routes were validated at the NIC level, confirming:
+- ✅ Azure default internet route is **Invalid**
+- ✅ User-defined route forwards traffic toward the hub
 
 ---
 
-## Cost Awareness
-To minimize ongoing cost while preserving architectural integrity:
-- Azure Spot VM is used
-- VM is stopped/deallocated when not actively tested
-- No public IPs assigned to workloads
+## Security (Policy-First Firewall Design)
+
+An **Azure Firewall Policy** was created to demonstrate centralized, scalable security governance without deploying a full firewall instance.
+
+### Firewall Policy Components
+
+- Rule Collection Group: `rcg-nonprod-egress`
+- Network Rule Collection: DNS / NTP egress
+- Application Rule Collection: OS and package update endpoints (FQDN-based)
+
+This reflects a **policy-first approach**, allowing security rules to be designed, reviewed, and versioned independently of enforcement infrastructure.
 
 ---
 
-## Why This Matters
-This project reflects:
-- Enterprise network segmentation
-- Zero-trust traffic control principles
-- Cloud governance fundamentals
-- Real Azure troubleshooting and validation skills
+## Cost Management
 
-It is designed to be **discussed live during interviews**, including trade-offs, design decisions, and operational considerations.
+Cost-aware decisions were intentionally applied:
 
----
+| Decision | Savings |
+|----------|---------|
+| Azure Spot VM | Up to 90% vs on-demand |
+| VM deallocated after validation | $0 compute when idle |
+| No firewall runtime deployed | ~$900/month saved |
+| No always-on compute resources | Variable cost only |
 
-## Future Enhancements (Planned)
-- Terraform IaC implementation
-- Azure Bastion integration
-- Azure Monitor + Log Analytics traffic logging
-- Private DNS Zones
-- CI/CD deployment of network components
+This approach enables architectural validation without unnecessary cloud spend.
 
 ---
 
-## Author
-Luis Antonio  
-Cloud & Platform Engineering Focus
+## Validation Evidence
+
+The following validations were performed:
+
+- [x] Hub ↔ Spoke peering connectivity
+- [x] UDR enforcement
+- [x] Runtime route validation via **Effective Routes**
+- [x] Governance enforcement via Azure Policy
+- [x] Firewall Policy configuration
+- [x] Cost optimization verification
+
+Screenshots are included in the `/architecture` directory.
+
+---
+
+## Screenshots
+
+### VNet Peering
+![VNet Peering](architecture/networkingpeer.png)
+
+### Effective Routes (UDR Validation)
+![Effective Routes](architecture/VMRoute.png)
+
+### UDR Configuration
+![UDR](architecture/networkingudr.png)
+
+### Azure Policy
+![Azure Policy](architecture/azurepolicyrequired.png)
+
+### Firewall Policy
+![Firewall Policy](architecture/securityfirewall.png)
+
+### Cost-Aware VM (Deallocated)
+![VM Deallocated](architecture/costvmdeallocated.png)
+
+---
+
+## Interview Walkthrough
+
+During an interview, this project can be presented as:
+
+1. **Governance first** (management groups + policy)
+2. **Network segmentation** (hub-and-spoke)
+3. **Traffic control** (UDRs)
+4. **Security design** (firewall policy)
+5. **Runtime validation** (effective routes proof)
+6. **Cost optimization decisions**
+
+---
+
+## Technologies Demonstrated
+
+- Azure Management Groups
+- Azure Policy & RBAC
+- Virtual Networks & Peering
+- User Defined Routes (UDRs)
+- Azure Firewall Policy
+- Azure Spot VMs
+- Resource Tagging Strategy
+
+---
+
+## About the Author
+
+**Luis Antonio Santiago-Ramirez**
+
+- 🏢 GIS Associate Technician at Eversource Energy
+- 🎓 Pursuing M.Eng Computer Engineering at Dartmouth College
+- ☁️ Azure Certified: AZ-500, AZ-400, AI-102, DP-203
+
+This project was developed independently outside of work hours using personal resources. No Eversource data or systems were used.
+
+---
+
+## Connect
+
+- [LinkedIn](https://www.linkedin.com/in/luisantoniosantiago-ramirez-70b418196)
+- [GitHub](https://github.com/SantRamLAnt)
+- 📧 lasrsecond@gmail.com
